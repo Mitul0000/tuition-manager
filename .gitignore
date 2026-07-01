@@ -49,7 +49,7 @@ captures/
 .cxx/
 
 # Google Services (Firebase) config — keep private if repo is public
-google-services.json
+app/google-services.json
 
 # Freeline
 freeline.py
