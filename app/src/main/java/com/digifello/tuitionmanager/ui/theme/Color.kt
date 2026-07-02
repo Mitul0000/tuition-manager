@@ -9,3 +9,7 @@ val WarningAmber = Color(0xFFD97706)   // "Partial" badge
 val ErrorRed = Color(0xFFDC2626)       // "Pending" badge
 val BackgroundGray = Color(0xFFF4F4F5)
 val SurfaceWhite = Color(0xFFFFFFFF)
+
+val Purple80 = Color(0xFFD0BCFF)
+val PurpleGrey80 = Color(0xFFCCC2DC)
+val Pink80 = Color(0xFFEFB8C8)

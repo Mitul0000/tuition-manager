@@ -15,6 +15,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.digifello.tuitionmanager.ui.common.UiState
 import com.digifello.tuitionmanager.ui.dashboard.StatusBadge
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayScreen(
     onBatchClick: (String) -> Unit,

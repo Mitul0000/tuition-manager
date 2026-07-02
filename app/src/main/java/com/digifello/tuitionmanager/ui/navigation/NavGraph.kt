@@ -2,6 +2,7 @@ package com.digifello.tuitionmanager.ui.navigation
 
 import androidx.compose.runtime.Composable
 import com.digifello.tuitionmanager.ui.addeditbatch.AddEditBatchScreen
+import com.digifello.tuitionmanager.ui.addeditbatch.AddEditBatchViewModel
 import com.digifello.tuitionmanager.ui.questionbank.QuestionBankScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -17,6 +18,7 @@ import com.digifello.tuitionmanager.ui.finance.FinanceScreen
 import com.digifello.tuitionmanager.ui.students.AllStudentsScreen
 import com.digifello.tuitionmanager.ui.today.TodayScreen
 import com.digifello.tuitionmanager.ui.common.AddEditBatchViewModelFactory
+
 @Composable
 fun NavGraph() {
     val navController = rememberNavController()

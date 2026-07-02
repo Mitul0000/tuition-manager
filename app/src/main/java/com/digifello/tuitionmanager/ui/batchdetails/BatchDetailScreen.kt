@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.digifello.tuitionmanager.util.CurrencyFormatter
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BatchDetailScreen(
     viewModel: BatchDetailViewModel,

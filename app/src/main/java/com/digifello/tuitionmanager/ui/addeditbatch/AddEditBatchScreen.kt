@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 
 private val ALL_DAYS = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditBatchScreen(
     viewModel: AddEditBatchViewModel,

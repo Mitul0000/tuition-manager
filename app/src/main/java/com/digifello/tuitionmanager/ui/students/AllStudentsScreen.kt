@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.digifello.tuitionmanager.ui.common.UiState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllStudentsScreen(viewModel: AllStudentsViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
