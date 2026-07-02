@@ -7,18 +7,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.digifello.tuitionmanager.data.repository.AppMaintenance
 import com.digifello.tuitionmanager.ui.navigation.NavGraph
 import com.digifello.tuitionmanager.ui.navigation.Screen
 import com.digifello.tuitionmanager.ui.theme.TuitionManagerTheme
 import com.google.firebase.auth.FirebaseAuth
-import androidx.lifecycle.lifecycleScope
-import com.digifello.tuitionmanager.data.repository.AppMaintenance
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -28,8 +30,6 @@ class MainActivity : ComponentActivity() {
         val auth = FirebaseAuth.getInstance()
         if (auth.currentUser == null) {
             auth.signInAnonymously().addOnCompleteListener {
-                // Run maintenance only after auth is confirmed ready,
-                // since Firestore rules require request.auth != null
                 lifecycleScope.launch {
                     AppMaintenance().runMonthlyPaymentMaintenance()
                 }
@@ -56,18 +56,18 @@ fun MainScreen() {
         bottomBar = { AppBottomNavBar(navController) }
     ) { innerPadding ->
         androidx.compose.foundation.layout.Box(modifier = androidx.compose.ui.Modifier.padding(innerPadding)) {
-            NavGraph()
+            NavGraph(navController = navController)
         }
     }
 }
 
 @Composable
-fun AppBottomNavBar(navController: androidx.navigation.NavHostController) {
+fun AppBottomNavBar(navController: NavHostController) {
     val items = listOf(
-        Triple(Screen.Dashboard, "Dashboard", Icons.Filled.Home),
+        Triple(Screen.Dashboard, "Home", Icons.Filled.Home),
         Triple(Screen.Today, "Today", Icons.Filled.DateRange),
         Triple(Screen.AllStudents, "Students", Icons.Filled.Person),
-        Triple(Screen.Finance, "Finance", Icons.Filled.Star)
+        Triple(Screen.Finance, "Finance", Icons.Filled.AccountBalanceWallet)
     )
 
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -84,15 +84,17 @@ fun AppBottomNavBar(navController: androidx.navigation.NavHostController) {
                     }
                 },
                 icon = { Icon(icon, contentDescription = label) },
-                label = { Text(label) }
+                label = { Text(label) },
+                alwaysShowLabel = false
             )
         }
-        // Question Bank — disabled/"coming soon" tab, not yet functional
+        // Question Bank — distinct lock icon + "Soon" label, clearly different from Finance
         NavigationBarItem(
             selected = false,
-            onClick = { /* no-op for now */ },
-            icon = { Icon(Icons.Filled.Star, contentDescription = "Question Bank") },
-            label = { Text("Questions") },
+            onClick = { /* no-op — feature not built yet */ },
+            icon = { Icon(Icons.Filled.Lock, contentDescription = "Question Bank — coming soon") },
+            label = { Text("Soon") },
+            alwaysShowLabel = true,
             enabled = false
         )
     }

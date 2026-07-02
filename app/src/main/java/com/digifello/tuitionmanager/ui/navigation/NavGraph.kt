@@ -1,27 +1,26 @@
 package com.digifello.tuitionmanager.ui.navigation
 
 import androidx.compose.runtime.Composable
-import com.digifello.tuitionmanager.ui.addeditbatch.AddEditBatchScreen
-import com.digifello.tuitionmanager.ui.addeditbatch.AddEditBatchViewModel
-import com.digifello.tuitionmanager.ui.questionbank.QuestionBankScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.digifello.tuitionmanager.ui.addeditbatch.AddEditBatchScreen
+import com.digifello.tuitionmanager.ui.addeditbatch.AddEditBatchViewModel
 import com.digifello.tuitionmanager.ui.batchdetail.BatchDetailScreen
 import com.digifello.tuitionmanager.ui.batchdetail.BatchDetailViewModel
+import com.digifello.tuitionmanager.ui.common.AddEditBatchViewModelFactory
 import com.digifello.tuitionmanager.ui.common.BatchDetailViewModelFactory
 import com.digifello.tuitionmanager.ui.dashboard.DashboardScreen
 import com.digifello.tuitionmanager.ui.finance.FinanceScreen
+import com.digifello.tuitionmanager.ui.questionbank.QuestionBankScreen
 import com.digifello.tuitionmanager.ui.students.AllStudentsScreen
 import com.digifello.tuitionmanager.ui.today.TodayScreen
-import com.digifello.tuitionmanager.ui.common.AddEditBatchViewModelFactory
 
 @Composable
-fun NavGraph() {
-    val navController = rememberNavController()
+fun NavGraph(navController: NavHostController) {
 
     NavHost(navController = navController, startDestination = Screen.Dashboard.route) {
 
@@ -55,6 +54,7 @@ fun NavGraph() {
                 }
             )
         }
+
         composable(
             route = Screen.AddEditBatch.route,
             arguments = listOf(navArgument("batchId") {
@@ -93,7 +93,5 @@ fun NavGraph() {
                 onDeleted = { navController.popBackStack() }
             )
         }
-
-        // AddEditBatch and QuestionBank routes will be added once those screens are built
     }
 }

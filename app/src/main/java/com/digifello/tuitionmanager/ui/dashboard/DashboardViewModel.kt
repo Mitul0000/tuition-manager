@@ -10,15 +10,13 @@ import com.digifello.tuitionmanager.util.DateUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
-/**
- * One batch combined with its current month's payment status —
- * this is what the Dashboard screen actually displays per card.
- */
 data class BatchWithStatus(
     val batch: Batch,
-    val paymentStatus: String   // "pending" | "partial" | "paid"
+    val paymentStatus: String
 )
 
 class DashboardViewModel(
@@ -35,15 +33,29 @@ class DashboardViewModel(
 
     private fun loadBatches() {
         viewModelScope.launch {
-            batchRepository.getBatchesFlow().collect { batches ->
-                val month = DateUtils.currentMonthKey()
-                // For each batch, fetch its current month's payment to know the badge status
-                val withStatus = batches.map { batch ->
-                    val payments = paymentRepository.getCurrentMonthPayments(listOf(batch.id), month)
-                    val status = payments.firstOrNull()?.status ?: "pending"
-                    BatchWithStatus(batch, status)
+            // collectLatest: whenever the batch list itself changes, restart everything below
+            batchRepository.getBatchesFlow().collectLatest { batches ->
+                if (batches.isEmpty()) {
+                    _uiState.value = UiState.Success(emptyList())
+                    return@collectLatest
                 }
-                _uiState.value = UiState.Success(withStatus)
+
+                val month = DateUtils.currentMonthKey()
+
+                // One LIVE payment listener per batch, instead of a one-time fetch —
+                // this is what makes Dashboard update automatically the moment
+                // a payment is marked on Batch Detail, without needing a restart.
+                val paymentFlows = batches.map { batch ->
+                    paymentRepository.getPaymentForMonth(batch.id, month)
+                }
+
+                combine(paymentFlows) { paymentsArray ->
+                    batches.mapIndexed { index, batch ->
+                        BatchWithStatus(batch, paymentsArray[index]?.status ?: "pending")
+                    }
+                }.collect { combinedList ->
+                    _uiState.value = UiState.Success(combinedList)
+                }
             }
         }
     }

@@ -47,7 +47,7 @@ fun DashboardScreen(
             is UiState.Success -> {
                 if (state.data.isEmpty()) {
                     Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                        Text("No batches yet. Tap + to create your first one.")
+                        Text("Tap + to create your first one.")
                     }
                 } else {
                     LazyColumn(

@@ -48,36 +48,40 @@ class FinanceViewModel(
 
     fun loadFinanceData() {
         viewModelScope.launch {
-            val currentMonth = DateUtils.currentMonthKey()
-            val batches = batchRepository.getBatchesOnce()
-            val batchIds = batches.map { it.id }
+            try {
+                val currentMonth = DateUtils.currentMonthKey()
+                val batches = batchRepository.getBatchesOnce()
+                val batchIds = batches.map { it.id }
 
-            // "This Month" — only current month's records, summed
-            val currentMonthPayments = paymentRepository.getCurrentMonthPayments(batchIds, currentMonth)
-            val expected = currentMonthPayments.sumOf { it.expectedAmount }
-            val received = currentMonthPayments.sumOf { it.amountPaid }
+                // "This Month" — only current month's records, summed
+                val currentMonthPayments = paymentRepository.getCurrentMonthPayments(batchIds, currentMonth)
+                val expected = currentMonthPayments.sumOf { it.expectedAmount }
+                val received = currentMonthPayments.sumOf { it.amountPaid }
 
-            // "Total Due" — every unpaid/partial record, any month (dues persist across months)
-            val outstanding = paymentRepository.getAllOutstandingPayments()
-            val dueItems = outstanding
-                .map { DueItem(it.batchId, it.batchName, it.month, it.expectedAmount - it.amountPaid) }
-                .filter { it.dueAmount > 0.0 }
-            val totalDue = dueItems.sumOf { it.dueAmount }
+                // "Total Due" — every unpaid/partial record, any month (dues persist across months)
+                val outstanding = paymentRepository.getAllOutstandingPayments()
+                val dueItems = outstanding
+                    .map { DueItem(it.batchId, it.batchName, it.month, it.expectedAmount - it.amountPaid) }
+                    .filter { it.dueAmount > 0.0 }
+                val totalDue = dueItems.sumOf { it.dueAmount }
 
-            // Batch-wise breakdown — this month's status per batch, for the bottom list
-            val breakdown = currentMonthPayments.map {
-                BatchMonthStatus(it.batchId, it.batchName, it.status, it.amountPaid, it.expectedAmount)
-            }
+                // Batch-wise breakdown — this month's status per batch, for the bottom list
+                val breakdown = currentMonthPayments.map {
+                    BatchMonthStatus(it.batchId, it.batchName, it.status, it.amountPaid, it.expectedAmount)
+                }
 
-            _uiState.value = UiState.Success(
-                FinanceUiState(
-                    expectedThisMonth = expected,
-                    receivedThisMonth = received,
-                    totalDue = totalDue,
-                    dueItems = dueItems,
-                    batchBreakdown = breakdown
+                _uiState.value = UiState.Success(
+                    FinanceUiState(
+                        expectedThisMonth = expected,
+                        receivedThisMonth = received,
+                        totalDue = totalDue,
+                        dueItems = dueItems,
+                        batchBreakdown = breakdown
+                    )
                 )
-            )
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Failed to load finance data")
+            }
         }
     }
 }

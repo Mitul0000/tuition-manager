@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.digifello.tuitionmanager.ui.dashboard.StatusBadge
 import com.digifello.tuitionmanager.util.CurrencyFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +72,14 @@ fun BatchDetailScreen(
             item {
                 Card(shape = RoundedCornerShape(16.dp)) {
                     Column(Modifier.padding(16.dp)) {
-                        Text("Financial Health", fontWeight = FontWeight.Bold)
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Financial Health", fontWeight = FontWeight.Bold)
+                            StatusBadge(payment?.status ?: "pending")
+                        }
                         Spacer(Modifier.height(8.dp))
                         val expected = payment?.expectedAmount ?: batch.totalMoney
                         val paid = payment?.amountPaid ?: 0.0

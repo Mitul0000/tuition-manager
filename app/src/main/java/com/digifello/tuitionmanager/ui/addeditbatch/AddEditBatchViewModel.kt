@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.digifello.tuitionmanager.data.model.Batch
 import com.digifello.tuitionmanager.data.model.Student
 import com.digifello.tuitionmanager.data.repository.BatchRepository
+import com.digifello.tuitionmanager.data.repository.PaymentRepository
+import com.digifello.tuitionmanager.util.DateUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +32,8 @@ data class AddEditBatchFormState(
 
 class AddEditBatchViewModel(
     private val existingBatchId: String? = null,
-    private val batchRepository: BatchRepository = BatchRepository()
+    private val batchRepository: BatchRepository = BatchRepository(),
+    private val paymentRepository: PaymentRepository = PaymentRepository()
 ) : ViewModel() {
 
     val isEditMode: Boolean = existingBatchId != null
@@ -106,6 +109,11 @@ class AddEditBatchViewModel(
      * Handles both create and update. In edit mode, only batch-level
      * fields are saved — the roster is managed separately (not yet built),
      * so numberOfStudents/students are NOT touched here when editing.
+     *
+     * For NEW batches, this also immediately creates the current month's
+     * payment record, instead of waiting for the next app-open maintenance
+     * pass — otherwise a freshly created batch shows no payment status
+     * until the app is restarted.
      */
     fun saveBatch(onSaved: () -> Unit) {
         val state = _formState.value
@@ -120,31 +128,45 @@ class AddEditBatchViewModel(
         _formState.value = state.copy(isSaving = true, errorMessage = null)
 
         viewModelScope.launch {
-            if (isEditMode && existingBatchId != null) {
-                val updatedBatch = Batch(
-                    id = existingBatchId,
-                    name = state.batchName,
-                    days = state.selectedDays.toList(),
-                    time = state.time,
-                    numberOfStudents = numberOfStudents,
-                    totalMoney = totalMoney
-                )
-                batchRepository.updateBatch(updatedBatch)
-            } else {
-                val newBatch = Batch(
-                    name = state.batchName,
-                    days = state.selectedDays.toList(),
-                    time = state.time,
-                    numberOfStudents = numberOfStudents,
-                    totalMoney = totalMoney
-                )
-                val students = state.studentEntries.map {
-                    Student(name = it.name, phone = it.phone, description = it.description.ifBlank { null })
+            try {
+                if (isEditMode && existingBatchId != null) {
+                    val updatedBatch = Batch(
+                        id = existingBatchId,
+                        name = state.batchName,
+                        days = state.selectedDays.toList(),
+                        time = state.time,
+                        numberOfStudents = numberOfStudents,
+                        totalMoney = totalMoney
+                    )
+                    batchRepository.updateBatch(updatedBatch)
+                } else {
+                    val newBatch = Batch(
+                        name = state.batchName,
+                        days = state.selectedDays.toList(),
+                        time = state.time,
+                        numberOfStudents = numberOfStudents,
+                        totalMoney = totalMoney
+                    )
+                    val students = state.studentEntries.map {
+                        Student(name = it.name, phone = it.phone, description = it.description.ifBlank { null })
+                    }
+                    val newBatchId = batchRepository.addBatch(newBatch, students)
+
+                    paymentRepository.ensureCurrentMonthPayment(
+                        batchId = newBatchId,
+                        batchName = state.batchName,
+                        month = DateUtils.currentMonthKey(),
+                        expectedAmount = totalMoney
+                    )
                 }
-                batchRepository.addBatch(newBatch, students)
+                _formState.value = _formState.value.copy(isSaving = false)
+                onSaved()
+            } catch (e: Exception) {
+                _formState.value = _formState.value.copy(
+                    isSaving = false,
+                    errorMessage = "Failed to save: ${e.message}"
+                )
             }
-            _formState.value = _formState.value.copy(isSaving = false)
-            onSaved()
         }
     }
 }
