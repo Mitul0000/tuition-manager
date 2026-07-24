@@ -1,97 +1,97 @@
 package com.digifello.tuitionmanager.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.digifello.tuitionmanager.ui.addeditbatch.AddEditBatchScreen
-import com.digifello.tuitionmanager.ui.addeditbatch.AddEditBatchViewModel
-import com.digifello.tuitionmanager.ui.batchdetail.BatchDetailScreen
-import com.digifello.tuitionmanager.ui.batchdetail.BatchDetailViewModel
-import com.digifello.tuitionmanager.ui.common.AddEditBatchViewModelFactory
-import com.digifello.tuitionmanager.ui.common.BatchDetailViewModelFactory
-import com.digifello.tuitionmanager.ui.dashboard.DashboardScreen
-import com.digifello.tuitionmanager.ui.finance.FinanceScreen
-import com.digifello.tuitionmanager.ui.questiongenerator.QuestionBankScreen
-import com.digifello.tuitionmanager.ui.students.AllStudentsScreen
-import com.digifello.tuitionmanager.ui.today.TodayScreen
+import com.digifello.tuitionmanager.ui.auth.forgotpassword.ForgotPasswordScreen
+import com.digifello.tuitionmanager.ui.auth.login.LoginScreen
+import com.digifello.tuitionmanager.ui.auth.otp.OtpScreen
+import com.digifello.tuitionmanager.ui.auth.signup.SignupScreen
+import com.digifello.tuitionmanager.ui.splash.SplashScreen
+
+// Root graph: decides between the pre-auth flow and the main 5-tab app.
+// SplashScreen is the actual start destination — it checks the Firebase
+// session and navigates onward before anything else renders.
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun RootNavGraph(navController: NavHostController) {
+    NavHost(navController = navController, startDestination = Screen.Splash.route) {
 
-    NavHost(navController = navController, startDestination = Screen.Dashboard.route) {
-
-        composable(Screen.Dashboard.route) {
-            DashboardScreen(
-                onBatchClick = { batchId ->
-                    navController.navigate(Screen.BatchDetail.createRoute(batchId))
+        composable(Screen.Splash.route) {
+            SplashScreen(
+                onAuthenticated = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
                 },
-                onAddBatchClick = {
-                    navController.navigate(Screen.AddEditBatch.createRoute())
+                onUnauthenticated = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
                 }
             )
         }
 
-        composable(Screen.Today.route) {
-            TodayScreen(
-                onBatchClick = { batchId ->
-                    navController.navigate(Screen.BatchDetail.createRoute(batchId))
-                }
+        composable(Screen.Login.route) {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                },
+                onSignupClick = { navController.navigate(Screen.Signup.route) },
+                onForgotPasswordClick = { navController.navigate(Screen.ForgotPassword.route) }
             )
         }
 
-        composable(Screen.AllStudents.route) {
-            AllStudentsScreen()
-        }
-
-        composable(Screen.Finance.route) {
-            FinanceScreen(
-                onBatchClick = { batchId ->
-                    navController.navigate(Screen.BatchDetail.createRoute(batchId))
-                }
+        composable(Screen.Signup.route) {
+            SignupScreen(
+                onSignupSubmitted = { email ->
+                    navController.navigate(Screen.Otp.createRoute(email, purpose = "signup"))
+                },
+                onBackToLogin = { navController.popBackStack() }
             )
         }
 
         composable(
-            route = Screen.AddEditBatch.route,
-            arguments = listOf(navArgument("batchId") {
-                type = NavType.StringType
-                nullable = true
-                defaultValue = null
-            })
-        ) { backStackEntry ->
-            val batchId = backStackEntry.arguments?.getString("batchId")
-            val viewModel: AddEditBatchViewModel = viewModel(
-                factory = AddEditBatchViewModelFactory(batchId)
+            route = Screen.Otp.route,
+            arguments = listOf(
+                navArgument("email") { type = NavType.StringType; defaultValue = "" },
+                navArgument("purpose") { type = NavType.StringType; defaultValue = "" }
             )
-            AddEditBatchScreen(
-                viewModel = viewModel,
-                onSaved = { navController.popBackStack() },
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email").orEmpty()
+            val purpose = backStackEntry.arguments?.getString("purpose").orEmpty()
+            OtpScreen(
+                email = email,
+                purpose = purpose,
+                onVerified = {
+                    if (purpose == "signup") {
+                        navController.navigate(Screen.Dashboard.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.popBackStack(Screen.Login.route, inclusive = false)
+                    }
+                },
                 onBackClick = { navController.popBackStack() }
             )
         }
 
-        composable(Screen.QuestionBank.route) {
-            QuestionBankScreen()
+        composable(Screen.ForgotPassword.route) {
+            ForgotPasswordScreen(
+                onResetEmailSent = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
         }
 
-        composable(
-            route = Screen.BatchDetail.route,
-            arguments = listOf(navArgument("batchId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val batchId = backStackEntry.arguments?.getString("batchId") ?: return@composable
-            val viewModel: BatchDetailViewModel = viewModel(
-                factory = BatchDetailViewModelFactory(batchId)
-            )
-            BatchDetailScreen(
-                viewModel = viewModel,
-                onBackClick = { navController.popBackStack() },
-                onEditClick = { navController.navigate(Screen.AddEditBatch.createRoute(batchId)) },
-                onDeleted = { navController.popBackStack() }
-            )
+        // Everything past auth lives inside MainScaffold, which owns the
+        // bottom nav bar and its own nested NavHost (see MainNavGraph.kt).
+        composable(Screen.Dashboard.route) {
+            MainScaffold(navController = navController)
         }
     }
 }
