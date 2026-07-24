@@ -9,8 +9,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.digifello.tuitionmanager.ui.common.AppPrimaryButton
+import com.digifello.tuitionmanager.ui.common.AppTextField
+import com.digifello.tuitionmanager.ui.theme.ChalkWhite
+import com.digifello.tuitionmanager.ui.theme.Ink60
+import com.digifello.tuitionmanager.ui.theme.InkNavy
+import com.digifello.tuitionmanager.ui.theme.Marigold
+import com.digifello.tuitionmanager.ui.theme.UnpaidCrimson
 
 private val ALL_DAYS = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
@@ -25,20 +32,30 @@ fun AddEditBatchScreen(
     var step by remember { mutableStateOf(1) }
 
     Scaffold(
+        containerColor = ChalkWhite,
         topBar = {
             TopAppBar(
-                title = { Text(if (viewModel.isEditMode) "Edit Batch" else "Batch Details") },
+                title = {
+                    Text(
+                        if (viewModel.isEditMode) "Edit Batch" else "New Batch",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = InkNavy)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = ChalkWhite,
+                    titleContentColor = InkNavy
+                )
             )
         }
     ) { padding ->
         if (formState.isLoadingExisting) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = Marigold)
             }
             return@Scaffold
         }
@@ -51,47 +68,43 @@ fun AddEditBatchScreen(
                 Step1BatchFields(formState, viewModel)
                 Spacer(Modifier.height(16.dp))
                 formState.errorMessage?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error)
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = UnpaidCrimson)
                     Spacer(Modifier.height(8.dp))
                 }
 
                 if (viewModel.isEditMode) {
-                    Button(
+                    AppPrimaryButton(
+                        text = if (formState.isSaving) "Saving..." else "Save Changes",
                         onClick = { viewModel.saveBatch(onSaved) },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !formState.isSaving
-                    ) {
-                        Text(if (formState.isSaving) "Saving..." else "Save Changes")
-                    }
+                        enabled = !formState.isSaving,
+                        loading = formState.isSaving
+                    )
                 } else {
-                    Button(
+                    AppPrimaryButton(
+                        text = "Continue to Roster",
                         onClick = {
                             viewModel.generateStudentEntries()
                             step = 2
                         },
-                        modifier = Modifier.fillMaxWidth(),
                         enabled = formState.batchName.isNotBlank() &&
                                 formState.numberOfStudents.toIntOrNull() != null &&
                                 formState.totalMoney.toDoubleOrNull() != null &&
                                 formState.selectedDays.isNotEmpty()
-                    ) {
-                        Text("Continue to Roster")
-                    }
+                    )
                 }
             } else {
                 Step2StudentRoster(formState, viewModel)
                 Spacer(Modifier.height(16.dp))
                 formState.errorMessage?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error)
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = UnpaidCrimson)
                     Spacer(Modifier.height(8.dp))
                 }
-                Button(
+                AppPrimaryButton(
+                    text = if (formState.isSaving) "Saving..." else "Save Batch",
                     onClick = { viewModel.saveBatch(onSaved) },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !formState.isSaving
-                ) {
-                    Text(if (formState.isSaving) "Saving..." else "Save Batch")
-                }
+                    enabled = !formState.isSaving,
+                    loading = formState.isSaving
+                )
             }
         }
     }
@@ -99,47 +112,43 @@ fun AddEditBatchScreen(
 
 @Composable
 private fun Step1BatchFields(formState: AddEditBatchFormState, viewModel: AddEditBatchViewModel) {
-    Text("Batch Name", fontWeight = FontWeight.Bold)
-    OutlinedTextField(
+    AppTextField(
         value = formState.batchName,
         onValueChange = { viewModel.onBatchNameChanged(it) },
-        placeholder = { Text("e.g. Grade 10 Geometry") },
-        modifier = Modifier.fillMaxWidth()
+        label = "Batch Name",
+        placeholder = "e.g. Grade 10 Geometry"
     )
     Spacer(Modifier.height(16.dp))
 
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        Column(Modifier.weight(1f)) {
-            Text("No. of Students", fontWeight = FontWeight.Bold)
-            OutlinedTextField(
-                value = formState.numberOfStudents,
-                onValueChange = { viewModel.onNumberOfStudentsChanged(it) },
-                enabled = !viewModel.isEditMode, // roster count locked once created; managed separately later
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        Column(Modifier.weight(1f)) {
-            Text("Total Fee (৳)", fontWeight = FontWeight.Bold)
-            OutlinedTextField(
-                value = formState.totalMoney,
-                onValueChange = { viewModel.onTotalMoneyChanged(it) },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+        AppTextField(
+            value = formState.numberOfStudents,
+            onValueChange = { viewModel.onNumberOfStudentsChanged(it) },
+            label = "No. of Students",
+            keyboardType = KeyboardType.Number,
+            enabled = !viewModel.isEditMode, // roster count locked once created; managed separately later
+            modifier = Modifier.weight(1f)
+        )
+        AppTextField(
+            value = formState.totalMoney,
+            onValueChange = { viewModel.onTotalMoneyChanged(it) },
+            label = "Total Fee (৳)",
+            keyboardType = KeyboardType.Number,
+            modifier = Modifier.weight(1f)
+        )
     }
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(20.dp))
 
-    Text("Weekly Schedule", fontWeight = FontWeight.Bold)
+    Text("Weekly Schedule", style = MaterialTheme.typography.titleSmall, color = InkNavy)
     Spacer(Modifier.height(8.dp))
     FlowRowDays(formState.selectedDays) { day -> viewModel.onDayToggled(day) }
     Spacer(Modifier.height(16.dp))
 
-    Text("Class Time", fontWeight = FontWeight.Bold)
-    OutlinedTextField(
+    AppTextField(
         value = formState.time,
         onValueChange = { viewModel.onTimeChanged(it) },
-        placeholder = { Text("e.g. 17:00") },
-        modifier = Modifier.fillMaxWidth()
+        label = "Class Time",
+        placeholder = "e.g. 17:00"
     )
 }
 
@@ -149,10 +158,16 @@ private fun FlowRowDays(selectedDays: Set<String>, onToggle: (String) -> Unit) {
         ALL_DAYS.chunked(4).forEach { rowDays ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 rowDays.forEach { day ->
+                    val selected = selectedDays.contains(day)
                     FilterChip(
-                        selected = selectedDays.contains(day),
+                        selected = selected,
                         onClick = { onToggle(day) },
-                        label = { Text(day.take(3)) }
+                        label = { Text(day.take(3)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Marigold,
+                            selectedLabelColor = InkNavy,
+                            labelColor = Ink60
+                        )
                     )
                 }
             }
@@ -163,30 +178,31 @@ private fun FlowRowDays(selectedDays: Set<String>, onToggle: (String) -> Unit) {
 
 @Composable
 private fun Step2StudentRoster(formState: AddEditBatchFormState, viewModel: AddEditBatchViewModel) {
-    Text("Student Roster", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-    Spacer(Modifier.height(8.dp))
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Text("Student Roster", style = MaterialTheme.typography.titleMedium, color = InkNavy)
+    Spacer(Modifier.height(12.dp))
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         items(formState.studentEntries.size) { index ->
             val entry = formState.studentEntries[index]
             Column {
-                Text("Student ${index + 1}", fontWeight = FontWeight.Bold)
-                OutlinedTextField(
+                Text("Student ${index + 1}", style = MaterialTheme.typography.labelLarge, color = Ink60)
+                Spacer(Modifier.height(6.dp))
+                AppTextField(
                     value = entry.name,
                     onValueChange = { viewModel.onStudentFieldChanged(index, entry.copy(name = it)) },
-                    placeholder = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = "Name"
                 )
-                OutlinedTextField(
+                Spacer(Modifier.height(8.dp))
+                AppTextField(
                     value = entry.phone,
                     onValueChange = { viewModel.onStudentFieldChanged(index, entry.copy(phone = it)) },
-                    placeholder = { Text("Phone number") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = "Phone number",
+                    keyboardType = KeyboardType.Phone
                 )
-                OutlinedTextField(
+                Spacer(Modifier.height(8.dp))
+                AppTextField(
                     value = entry.description,
                     onValueChange = { viewModel.onStudentFieldChanged(index, entry.copy(description = it)) },
-                    placeholder = { Text("Short description (optional)") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = "Short description (optional)"
                 )
             }
         }

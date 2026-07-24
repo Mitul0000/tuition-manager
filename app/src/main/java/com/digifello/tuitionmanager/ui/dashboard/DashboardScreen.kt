@@ -1,20 +1,50 @@
 package com.digifello.tuitionmanager.ui.dashboard
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.digifello.tuitionmanager.ui.common.AppCard
+import com.digifello.tuitionmanager.ui.common.PaymentStatus
+import com.digifello.tuitionmanager.ui.common.PaymentStatusChip
 import com.digifello.tuitionmanager.ui.common.UiState
+import com.digifello.tuitionmanager.ui.common.WeekdayDotStrip
+import com.digifello.tuitionmanager.ui.theme.ChalkWhite
+import com.digifello.tuitionmanager.ui.theme.Ink40
+import com.digifello.tuitionmanager.ui.theme.Ink60
+import com.digifello.tuitionmanager.ui.theme.InkNavy
+import com.digifello.tuitionmanager.ui.theme.Marigold
+import com.digifello.tuitionmanager.ui.theme.NumberStyle
+import com.digifello.tuitionmanager.ui.theme.PaidGreen
+import com.digifello.tuitionmanager.ui.theme.PartialAmber
+import com.digifello.tuitionmanager.ui.theme.UnpaidCrimson
+
+// Full-day-name -> 1(Mon)..7(Sun), matching how Batch.days is stored ("Monday", etc.)
+private val DAY_INDEX = mapOf(
+    "Monday" to 1, "Tuesday" to 2, "Wednesday" to 3, "Thursday" to 4,
+    "Friday" to 5, "Saturday" to 6, "Sunday" to 7
+)
+private fun dayNamesToIndices(days: List<String>): Set<Int> =
+    days.mapNotNull { DAY_INDEX[it] }.toSet()
+
+private fun statusFrom(raw: String): PaymentStatus = when (raw) {
+    "paid" -> PaymentStatus.PAID
+    "partial" -> PaymentStatus.PARTIAL
+    else -> PaymentStatus.UNPAID
+}
+
+private fun statusAccentColor(status: PaymentStatus) = when (status) {
+    PaymentStatus.PAID -> PaidGreen
+    PaymentStatus.PARTIAL -> PartialAmber
+    PaymentStatus.UNPAID -> UnpaidCrimson
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,9 +56,22 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("TutorFlow") }) },
+        containerColor = ChalkWhite,
+        topBar = {
+            TopAppBar(
+                title = { Text("TutorDesk", style = MaterialTheme.typography.headlineMedium) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = ChalkWhite,
+                    titleContentColor = InkNavy
+                )
+            )
+        },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddBatchClick) {
+            FloatingActionButton(
+                onClick = onAddBatchClick,
+                containerColor = Marigold,
+                contentColor = InkNavy
+            ) {
                 Icon(Icons.Filled.Add, contentDescription = "Add batch")
             }
         }
@@ -36,18 +79,26 @@ fun DashboardScreen(
         when (val state = uiState) {
             is UiState.Loading -> {
                 Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = Marigold)
                 }
             }
             is UiState.Error -> {
                 Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    Text("Something went wrong: ${state.message}")
+                    Text(
+                        "Something went wrong: ${state.message}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Ink60
+                    )
                 }
             }
             is UiState.Success -> {
                 if (state.data.isEmpty()) {
                     Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                        Text("Tap + to create your first one.")
+                        Text(
+                            "Tap + to create your first batch.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Ink60
+                        )
                     }
                 } else {
                     LazyColumn(
@@ -55,13 +106,14 @@ fun DashboardScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(state.data) { batchWithStatus ->
+                        items(state.data, key = { it.batch.id }) { batchWithStatus ->
+                            val status = statusFrom(batchWithStatus.paymentStatus)
                             BatchCard(
                                 name = batchWithStatus.batch.name,
-                                days = batchWithStatus.batch.days.joinToString(", "),
+                                dayIndices = dayNamesToIndices(batchWithStatus.batch.days),
                                 time = batchWithStatus.batch.time,
                                 studentCount = batchWithStatus.batch.numberOfStudents,
-                                status = batchWithStatus.paymentStatus,
+                                status = status,
                                 onClick = { onBatchClick(batchWithStatus.batch.id) }
                             )
                         }
@@ -75,52 +127,37 @@ fun DashboardScreen(
 @Composable
 fun BatchCard(
     name: String,
-    days: String,
+    dayIndices: Set<Int>,
     time: String,
     studentCount: Int,
-    status: String,
+    status: PaymentStatus,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(Modifier.padding(16.dp)) {
+    AppCard(accentColor = statusAccentColor(status), onClick = onClick) {
+        Column(Modifier.fillMaxWidth()) {
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                Text(name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                StatusBadge(status)
+                Text(name, style = MaterialTheme.typography.titleMedium, color = InkNavy)
+                PaymentStatusChip(status)
             }
-            Spacer(Modifier.height(8.dp))
-            Text(days, style = MaterialTheme.typography.bodySmall)
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(10.dp))
+            WeekdayDotStrip(activeDays = dayIndices)
+            Spacer(Modifier.height(10.dp))
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(time, style = MaterialTheme.typography.bodyMedium)
-                Text("$studentCount Students", style = MaterialTheme.typography.bodyMedium)
+                Text(time, style = NumberStyle.meta, color = Ink60)
+                Text(
+                    "$studentCount ${if (studentCount == 1) "Student" else "Students"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Ink40
+                )
             }
         }
-    }
-}
-
-@Composable
-fun StatusBadge(status: String) {
-    val (label, color) = when (status) {
-        "paid" -> "Fully Paid" to MaterialTheme.colorScheme.tertiary
-        "partial" -> "Partial Paid" to MaterialTheme.colorScheme.secondary
-        else -> "Pending Dues" to MaterialTheme.colorScheme.error
-    }
-    Surface(color = color.copy(alpha = 0.15f), shape = RoundedCornerShape(50)) {
-        Text(
-            label,
-            color = color,
-            style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-        )
     }
 }
