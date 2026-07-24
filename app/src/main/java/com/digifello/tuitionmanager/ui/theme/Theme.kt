@@ -1,46 +1,97 @@
 package com.digifello.tuitionmanager.ui.theme
 
 import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryBlue,
-    secondary = WarningAmber,
-    tertiary = SuccessGreen,
-    error = ErrorRed,
-    background = BackgroundGray,
-    surface = SurfaceWhite
+    primary = Marigold,
+    onPrimary = InkNavy,
+    primaryContainer = SkyTint,
+    onPrimaryContainer = InkNavy,
+
+    secondary = SlateBlue,
+    onSecondary = CardWhite,
+    secondaryContainer = SkyTint,
+    onSecondaryContainer = InkNavy,
+
+    tertiary = PaidGreen,
+    onTertiary = CardWhite,
+
+    error = UnpaidCrimson,
+    onError = CardWhite,
+    errorContainer = UnpaidCrimsonBg,
+    onErrorContainer = UnpaidCrimson,
+
+    background = ChalkWhite,
+    onBackground = InkNavy,
+
+    surface = CardWhite,
+    onSurface = InkNavy,
+    surfaceVariant = SkyTint,
+    onSurfaceVariant = Ink60,
+
+    outline = Hairline,
+    outlineVariant = Hairline
+)
+
+private val DarkColorScheme = darkColorScheme(
+    primary = Marigold,
+    onPrimary = InkNavy,
+    primaryContainer = DarkSurfaceRaised,
+    onPrimaryContainer = DarkTextPrimary,
+
+    secondary = SlateBlue,
+    onSecondary = DarkTextPrimary,
+    secondaryContainer = DarkSurfaceRaised,
+    onSecondaryContainer = DarkTextPrimary,
+
+    tertiary = PaidGreen,
+    onTertiary = DarkBackground,
+
+    error = UnpaidCrimson,
+    onError = DarkTextPrimary,
+    errorContainer = UnpaidCrimsonBg,
+    onErrorContainer = UnpaidCrimson,
+
+    background = DarkBackground,
+    onBackground = DarkTextPrimary,
+
+    surface = DarkSurface,
+    onSurface = DarkTextPrimary,
+    surfaceVariant = DarkSurfaceRaised,
+    onSurfaceVariant = DarkTextSecondary,
+
+    outline = DarkHairline,
+    outlineVariant = DarkHairline
 )
 
 @Composable
 fun TuitionManagerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Dynamic color deliberately OFF: this app has its own brand palette
+    // (Ink Navy / Marigold / Slate Blue) and should never fall back to
+    // the user's wallpaper-derived Material You colors.
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = colorScheme.background.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+        }
     }
 
     MaterialTheme(

@@ -15,7 +15,7 @@ import com.digifello.tuitionmanager.ui.common.AddEditBatchViewModelFactory
 import com.digifello.tuitionmanager.ui.common.BatchDetailViewModelFactory
 import com.digifello.tuitionmanager.ui.dashboard.DashboardScreen
 import com.digifello.tuitionmanager.ui.finance.FinanceScreen
-import com.digifello.tuitionmanager.ui.questionbank.QuestionBankScreen
+import com.digifello.tuitionmanager.ui.questiongenerator.QuestionBankScreen
 import com.digifello.tuitionmanager.ui.students.AllStudentsScreen
 import com.digifello.tuitionmanager.ui.today.TodayScreen
 
