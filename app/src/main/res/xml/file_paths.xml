@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Public Downloads folder — where we save generated PDFs (legacy / pre-API 29 path) -->
+    <external-path
+        name="downloads"
+        path="Download/" />
+
+    <!-- App-private cache, used as a fallback if we ever need a temp copy to share -->
+    <cache-path
+        name="cache"
+        path="." />
+
+    <!-- App-private external files dir, another safe fallback location -->
+    <external-files-path
+        name="external_files"
+        path="." />
+</paths>
