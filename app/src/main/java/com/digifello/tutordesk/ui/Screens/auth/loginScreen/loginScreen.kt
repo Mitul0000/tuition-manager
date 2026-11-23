@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import com.digifello.tutordesk.ui.Screens.auth.PrivacyAgreementText
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -36,6 +37,8 @@ import com.digifello.tutordesk.ui.theme.Marigold
 import com.digifello.tutordesk.ui.theme.SlateBlue
 import com.digifello.tutordesk.ui.theme.SlateBlueDark
 import com.digifello.tutordesk.ui.theme.UnpaidCrimson
+import androidx.compose.ui.platform.LocalContext
+import com.digifello.tutordesk.ui.Screens.auth.GoogleSignInButton
 
 @Composable
 fun LoginScreen(
@@ -49,6 +52,7 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(uiState.isLoginSuccessful) {
         if (uiState.isLoginSuccessful) onLoginSuccess()
@@ -229,6 +233,23 @@ fun LoginScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = secondaryColor.copy(alpha = 0.3f))
+                Text("  OR  ", style = MaterialTheme.typography.labelSmall, color = secondaryColor)
+                HorizontalDivider(modifier = Modifier.weight(1f), color = secondaryColor.copy(alpha = 0.3f))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            GoogleSignInButton(
+                text = "Continue with Google",
+                textColor = textColor,
+                enabled = !uiState.isLoading,
+                onClick = { viewModel.signInWithGoogle(context) }
+            )
+
             Spacer(modifier = Modifier.height(28.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -258,7 +279,12 @@ fun LoginScreen(
                     color = textColor
                 )
             }
+            Spacer(modifier = Modifier.height(16.dp))
 
+            PrivacyAgreementText(
+                textColor = secondaryColor,
+                linkColor = Marigold
+            )
             Spacer(modifier = Modifier.height(24.dp))
         }
     }

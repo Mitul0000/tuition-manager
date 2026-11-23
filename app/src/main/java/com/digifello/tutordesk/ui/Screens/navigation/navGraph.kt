@@ -99,6 +99,11 @@ fun TutorDeskNavGraph(
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
+                onGoogleSuccess = {
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                },
                 onNavigateToLogin = { navController.popBackStack() }
             )
         }

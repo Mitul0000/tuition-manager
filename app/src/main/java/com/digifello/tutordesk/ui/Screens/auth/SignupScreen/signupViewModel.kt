@@ -6,12 +6,14 @@ import com.digifello.tutordesk.data.repository.AuthResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import android.content.Context
 import kotlinx.coroutines.launch
 
 data class SignupUiState(
     val isLoading: Boolean = false,
     val errMessage: String? = null,
-    val isSignUpSuccessful: Boolean = false
+    val isSignUpSuccessful: Boolean = false,
+    val isGoogleSuccessful: Boolean = false
 )
 
 class SignupViewModel(
@@ -48,6 +50,19 @@ class SignupViewModel(
                         isLoading = false
                     )
                 }
+            }
+        }
+    }
+
+    fun signInWithGoogle(context: Context) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errMessage = null)
+            when (val result = authRepository.signInWithGoogle(context)) {
+                is AuthResult.Success -> _uiState.value =
+                    _uiState.value.copy(isLoading = false, isGoogleSuccessful = true)
+                is AuthResult.Error -> _uiState.value =
+                    _uiState.value.copy(isLoading = false, errMessage = result.message)
+                else -> _uiState.value = _uiState.value.copy(isLoading = false)
             }
         }
     }

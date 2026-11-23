@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.airbnb.lottie.compose.*
 import com.digifello.tutordesk.R
+import com.digifello.tutordesk.ui.Screens.auth.GoogleSignInButton
+import com.digifello.tutordesk.ui.Screens.auth.PrivacyAgreementText
 import com.digifello.tutordesk.ui.theme.ChalkWhite
 import com.digifello.tutordesk.ui.theme.ChalkWhiteDark
 import com.digifello.tutordesk.ui.theme.Ink_Navy
@@ -33,10 +35,12 @@ import com.digifello.tutordesk.ui.theme.Marigold
 import com.digifello.tutordesk.ui.theme.SlateBlue
 import com.digifello.tutordesk.ui.theme.SlateBlueDark
 import com.digifello.tutordesk.ui.theme.UnpaidCrimson
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun SignupScreen(
     onSuccess: () -> Unit,
+    onGoogleSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit,
     viewModel: SignupViewModel = viewModel()
 ) {
@@ -48,9 +52,13 @@ fun SignupScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var passwordMismatchError by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(uiState.isSignUpSuccessful) {
         if (uiState.isSignUpSuccessful) onSuccess()
+    }
+    LaunchedEffect(uiState.isGoogleSuccessful) {
+        if (uiState.isGoogleSuccessful) onGoogleSuccess()
     }
 
     val isDark = isSystemInDarkTheme()
@@ -270,6 +278,23 @@ fun SignupScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = secondaryColor.copy(alpha = 0.3f))
+                Text("  OR  ", style = MaterialTheme.typography.labelSmall, color = secondaryColor)
+                HorizontalDivider(modifier = Modifier.weight(1f), color = secondaryColor.copy(alpha = 0.3f))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            GoogleSignInButton(
+                text = "Sign up with Google",
+                textColor = textColor,
+                enabled = !uiState.isLoading,
+                onClick = { viewModel.signInWithGoogle(context) }
+            )
+
             Spacer(modifier = Modifier.height(28.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -299,7 +324,12 @@ fun SignupScreen(
                     color = textColor
                 )
             }
+            Spacer(modifier = Modifier.height(16.dp))
 
+            PrivacyAgreementText(
+                textColor = secondaryColor,
+                linkColor = Marigold
+            )
             Spacer(modifier = Modifier.height(24.dp))
         }
     }

@@ -3,6 +3,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -129,13 +131,13 @@ private fun ChangeApiKeyRow(onClick: () -> Unit) {
 
 // STAGE: API KEY
 
-
 @Composable
 private fun ApiKeyStageContent(
     uiState: QuestionGeneratorUiState,
     viewModel: QuestionGeneratorViewModel
 ) {
     var showKey by remember { mutableStateOf(false) }
+    val uriHandler = LocalUriHandler.current
 
     Column(
         modifier = Modifier
@@ -160,15 +162,46 @@ private fun ApiKeyStageContent(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "It's stored securely on this device only and never leaves it except to talk to Google's API.",
+                    text = "Your key is encrypted and saved only on this device. TutorDesk doesn't keep a copy " +
+                            "of it. It's used only to send your request to Google's Gemini and is never shown to anyone else.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "How to get your free key",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "1. Tap the button below to open Google AI Studio.\n" +
+                            "2. Sign in with your Google account.\n" +
+                            "3. Tap \"Create API key\". If it asks, pick any project.\n" +
+                            "4. Copy the key that appears (it starts with \"AIza\").\n" +
+                            "5. Come back here, paste it in the box, and tap Save.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = { uriHandler.openUri("https://aistudio.google.com/api-keys") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Open Google AI Studio")
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // The key box (this is the part that was missing)
         OutlinedTextField(
             value = uiState.apiKeyInput,
             onValueChange = viewModel::onApiKeyInputChange,
@@ -225,15 +258,8 @@ private fun ApiKeyStageContent(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Don't have a key? Get one from Google AI Studio",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.secondary
-        )
     }
 }
-
 // STAGE: UPLOAD
 
 @Composable

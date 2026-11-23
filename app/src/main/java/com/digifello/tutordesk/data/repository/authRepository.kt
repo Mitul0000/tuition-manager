@@ -1,8 +1,18 @@
 package com.digifello.tutordesk.data.repository
-
+import android.content.Context
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import com.digifello.tutordesk.R
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.GoogleAuthProvider
+import kotlin.coroutines.cancellation.CancellationException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.tasks.await
+
 
 sealed class AuthResult {
     object Success : AuthResult()
@@ -28,6 +38,34 @@ class AuthRepository(private val auth : FirebaseAuth = FirebaseAuth.getInstance(
             }
         } catch (e: Exception) {
             AuthResult.Error(e.message ?: "Login failed. Please check your credentials.")
+        }
+    }
+
+    suspend fun signInWithGoogle(context: Context): AuthResult {
+        return try {
+            val option = GetSignInWithGoogleOption.Builder(
+                context.getString(R.string.default_web_client_id)
+            ).build()
+            val request = GetCredentialRequest.Builder().addCredentialOption(option).build()
+
+            val credential = CredentialManager.create(context)
+                .getCredential(context, request).credential
+
+            if (credential is CustomCredential &&
+                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+            ) {
+                val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+                auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null)).await()
+                AuthResult.Success   // Google accounts are already verified, so skip email verification
+            } else {
+                AuthResult.Error("Unexpected credential type.")
+            }
+        } catch (e: GetCredentialCancellationException) {
+            AuthResult.Error("Google sign-in cancelled.")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            AuthResult.Error(e.message ?: "Google sign-in failed.")
         }
     }
 

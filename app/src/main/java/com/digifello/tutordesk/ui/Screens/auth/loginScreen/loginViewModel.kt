@@ -1,6 +1,7 @@
 package com.digifello.tutordesk.ui.Screens.auth.loginScreen
 
 import androidx.lifecycle.ViewModel
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.digifello.tutordesk.data.repository.AuthRepository
 import com.digifello.tutordesk.data.repository.AuthResult
@@ -51,6 +52,19 @@ class LoginViewModel(
                         errorMessage = result.message
                     )
                 }
+            }
+        }
+    }
+
+    fun signInWithGoogle(context: Context) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            when (val result = authRepository.signInWithGoogle(context)) {
+                is AuthResult.Success -> _uiState.value =
+                    _uiState.value.copy(isLoading = false, isLoginSuccessful = true)
+                is AuthResult.Error -> _uiState.value =
+                    _uiState.value.copy(isLoading = false, errorMessage = result.message)
+                else -> _uiState.value = _uiState.value.copy(isLoading = false)
             }
         }
     }

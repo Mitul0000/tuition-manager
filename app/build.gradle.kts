@@ -16,8 +16,8 @@ android {
         applicationId = "com.digifello.tutordesk"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -43,6 +43,10 @@ android {
 
 dependencies {
     // External
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     implementation("com.airbnb.android:lottie-compose:6.5.2")
     implementation("androidx.compose.material:material-icons-extended:1.6.8")
     implementation(platform("com.google.firebase:firebase-bom:34.16.0"))

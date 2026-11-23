@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.digifello.tutordesk.navigation.TutorDeskNavGraph
 import com.digifello.tutordesk.ui.theme.TutorDeskTheme
+import com.digifello.tutordesk.util.TutorDeskMessagingService
 
 class MainActivity : ComponentActivity() {
 
@@ -21,6 +22,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         maybeRequestNotificationPermission()
+        com.google.firebase.messaging.FirebaseMessaging.getInstance().token
+            .addOnSuccessListener { TutorDeskMessagingService.saveTokenForCurrentUser(it) }
         setContent {
             TutorDeskTheme {
                 TutorDeskNavGraph()
