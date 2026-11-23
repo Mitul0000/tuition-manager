@@ -175,28 +175,28 @@ class PaymentRepository(
     }
 
 
-    fun getPaymentHistoryForStudent(studentId: String): Flow<List<Payment>> = callbackFlow {
-        val userId = authRepository.currentUserId ?: run {
-            close()
-            return@callbackFlow
-        }
-
-        val listener = userDoc(userId)
-            .collection("students").document(studentId)
-            .collection("payments")
-            .addSnapshotListener { snapshots, exception ->
-                if (exception != null) {
-                    close(exception)
-                    return@addSnapshotListener
-                }
-                val payments = snapshots?.documents?.mapNotNull { doc ->
-                    doc.toObject(Payment::class.java)?.copy(month = doc.id)
-                } ?: emptyList()
-                trySend(payments)
-            }
-
-        awaitClose { listener.remove() }
-    }
+//    fun getPaymentHistoryForStudent(studentId: String): Flow<List<Payment>> = callbackFlow {
+//        val userId = authRepository.currentUserId ?: run {
+//            close()
+//            return@callbackFlow
+//        }
+//
+//        val listener = userDoc(userId)
+//            .collection("students").document(studentId)
+//            .collection("payments")
+//            .addSnapshotListener { snapshots, exception ->
+//                if (exception != null) {
+//                    close(exception)
+//                    return@addSnapshotListener
+//                }
+//                val payments = snapshots?.documents?.mapNotNull { doc ->
+//                    doc.toObject(Payment::class.java)?.copy(month = doc.id)
+//                } ?: emptyList()
+//                trySend(payments)
+//            }
+//
+//        awaitClose { listener.remove() }
+//    }
 
     suspend fun getPaymentsForStudents(studentIds: List<String>, month: String): Map<String, Payment?> {
         val userId = authRepository.currentUserId ?: return emptyMap()

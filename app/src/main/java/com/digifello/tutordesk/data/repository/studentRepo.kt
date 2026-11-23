@@ -34,16 +34,16 @@ class StudentRepository(
         return studentDocRef.id
     }
 
-    suspend fun updateStudent(student: Student) {
-        val userId = authRepository.currentUserId ?: return
-        val studentDoc = userDoc(userId)
-            .collection("students")
-            .document(student.id)
-        studentDoc.update(
-            "name", student.name,
-            "phone", student.phone
-        ).await()
-    }
+//    suspend fun updateStudent(student: Student) {
+//        val userId = authRepository.currentUserId ?: return
+//        val studentDoc = userDoc(userId)
+//            .collection("students")
+//            .document(student.id)
+//        studentDoc.update(
+//            "name", student.name,
+//            "phone", student.phone
+//        ).await()
+//    }
 
     suspend fun deleteStudent(student: Student) {
         val userId = authRepository.currentUserId ?: return
@@ -79,11 +79,11 @@ class StudentRepository(
         }.await()
     }
 
-    suspend fun getStudentById(studentId: String): Student? {
-        val userId = authRepository.currentUserId ?: return null
-        val snapshot = userDoc(userId).collection("students").document(studentId).get().await()
-        return snapshot.toObject(Student::class.java)
-    }
+//    suspend fun getStudentById(studentId: String): Student? {
+//        val userId = authRepository.currentUserId ?: return null
+//        val snapshot = userDoc(userId).collection("students").document(studentId).get().await()
+//        return snapshot.toObject(Student::class.java)
+//    }
 
     fun getStudents(): Flow<List<Student>> = callbackFlow {
         val userId = authRepository.currentUserId ?: run {

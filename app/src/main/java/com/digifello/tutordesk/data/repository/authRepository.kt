@@ -2,7 +2,6 @@ package com.digifello.tutordesk.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
-import com.google.rpc.context.AttributeContext
 import kotlinx.coroutines.tasks.await
 
 sealed class AuthResult {
@@ -13,7 +12,6 @@ sealed class AuthResult {
 
 class AuthRepository(private val auth : FirebaseAuth = FirebaseAuth.getInstance()) {
     val currentUserId: String? get() = auth.currentUser?.uid
-    val isLoggedIn: Boolean get() = currentUserId != null
     val currentUserName: String? get() = auth.currentUser?.displayName
     val currentUserEmail: String? get() = auth.currentUser?.email
 
@@ -76,14 +74,6 @@ class AuthRepository(private val auth : FirebaseAuth = FirebaseAuth.getInstance(
     }
 
     val isEmailVerified: Boolean get() = auth.currentUser?.isEmailVerified == true
-
-    suspend fun getIdToken(forceRefresh: Boolean = false): String? {
-        return try {
-            auth.currentUser?.getIdToken(forceRefresh)?.await()?.token
-        } catch (e: Exception) {
-            null
-        }
-    }
 
     suspend fun resendVerificationEmail(): AuthResult {
         return try {

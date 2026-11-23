@@ -110,7 +110,6 @@ class QuestionGeneratorRepository(
         response.body() ?: MyPapersResponse()
     }
 
-    /** Writes PDF bytes to the device's public Downloads folder and returns a display path/URI string. */
     private fun savePdfToDownloads(context: Context, bytes: ByteArray, fileName: String): Uri {
         val uniqueName = uniqueFileName(fileName)
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
