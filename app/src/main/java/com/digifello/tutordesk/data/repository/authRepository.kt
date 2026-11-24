@@ -1,5 +1,6 @@
 package com.digifello.tutordesk.data.repository
 import android.content.Context
+import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -61,6 +62,7 @@ class AuthRepository(private val auth : FirebaseAuth = FirebaseAuth.getInstance(
                 AuthResult.Error("Unexpected credential type.")
             }
         } catch (e: GetCredentialCancellationException) {
+            Log.e("GoogleSignIn", "CANCELLED type=${e.type} msg=${e.message}", e)
             AuthResult.Error("Google sign-in cancelled.")
         } catch (e: CancellationException) {
             throw e

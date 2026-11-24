@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+    id("io.sentry.android.gradle")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -43,6 +45,15 @@ android {
 
 dependencies {
     // External
+    // Import the BoM for the Firebase platform
+    implementation(platform("com.google.firebase:firebase-bom:35.2.0"))
+
+    // Add the dependencies for the Crashlytics and Analytics libraries
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-crashlytics")
+    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-analytics")
     implementation("androidx.credentials:credentials:1.5.0")
     implementation("com.google.firebase:firebase-messaging")
     implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
@@ -77,4 +88,32 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+configurations.all {
+    resolutionStrategy {
+        force(
+            "com.google.firebase:firebase-auth:23.2.0",
+            "com.google.firebase:firebase-auth-ktx:23.2.0",
+            "com.google.android.gms:play-services-measurement:22.4.0",
+            "com.google.android.gms:play-services-measurement-api:22.4.0",
+            "com.google.android.gms:play-services-measurement-impl:22.4.0",
+            "com.google.android.gms:play-services-measurement-sdk:22.4.0",
+            "com.google.android.gms:play-services-measurement-sdk-api:22.4.0",
+            "com.google.android.gms:play-services-measurement-base:22.4.0"
+        )
+    }
+}
+
+configurations.all {
+    exclude(group = "com.google.firebase", module = "firebase-crashlytics")
+    exclude(group = "com.google.firebase", module = "firebase-crashlytics-ktx")
+    exclude(group = "com.google.firebase", module = "firebase-crashlytics-ndk")
+}
+
+
+sentry {
+    includeSourceContext.set(true)
+    org.set("digiasistant")
+    projectName.set("kotlin")
+    authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
 }

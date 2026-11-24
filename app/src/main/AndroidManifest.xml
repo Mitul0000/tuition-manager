@@ -24,6 +24,15 @@
         android:usesCleartextTraffic="false"
         android:theme="@style/Theme.TutorDesk">
 
+        <meta-data
+            android:name="io.sentry.dsn"
+            android:value="https://7100b5b9becc6964506e80060d94606b@o4512485920210944.ingest.us.sentry.io/4512485957566464" />
+
+        <!-- Optional: Enable performance tracing (1.0 = 100% of transactions) -->
+        <meta-data
+            android:name="io.sentry.traces.sample-rate"
+            android:value="1.0" />
+
 
         <activity
             android:name=".MainActivity"
